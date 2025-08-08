@@ -1,0 +1,43 @@
+{
+  "name": "copy-agent-rules",
+  "version": "1.0.0",
+  "description": "Merge Markdown rules and output to multiple IDE formats via a simple CLI.",
+  "type": "module",
+  "bin": {
+    "copy-agent-rules": "bin/copy-agent-rules.js"
+  },
+  "scripts": {
+    "copy": "node bin/copy-agent-rules.js",
+    "test": "node tests/tester.js",
+    "prepublishOnly": "npm test"
+  },
+  "keywords": [
+    "AI agent",
+    "Vibe Coding",
+    "rules",
+    "markdown",
+    "cli"
+  ],
+  "author": "Applepig Wu",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "bin/",
+    "config.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/applepig81/copy-agent-rules.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/applepig81/copy-agent-rules/issues"
+  },
+  "homepage": "https://github.com/applepig81/copy-agent-rules#readme"
+}

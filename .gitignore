@@ -1,0 +1,34 @@
+src
+dist
+.claude/memories/copy-agent-rule.md
+.clinerules/copy-agent-rule.md
+codex.md
+.cursor/rules/copy-agent-rule.mdc
+.gemini/memories/copy-agent-rule.md
+.kiro/steering/copy-agent-rule.md
+.github/instructions/copy-agent-rule.instructions.md
+.windsurf/rules/copy-agent-rule.md
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+
+# Env
+.env
+.env.*
+
+# Editor/OS
+.DS_Store
+.idea/
+.vscode/
+!.vscode/tasks.json
+!.vscode/launch.json
+.history/
+
+# Coverage
+coverage/
+.nyc_output/

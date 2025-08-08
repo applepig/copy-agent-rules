@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 1.0.1)'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install deps
+        run: npm ci || npm i --no-audit --no-fund
+      - name: Run tests
+        run: npm test
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Guard: fail if tag already exists
+        run: |
+          if git rev-parse -q --verify "refs/tags/v${{ inputs.version }}"; then
+            echo "Tag v${{ inputs.version }} already exists" >&2
+            exit 1
+          fi
+      - name: Bump version (commit + tag v<version>)
+        run: npm version ${{ inputs.version }} -m "chore(release): v%s"
+      - name: Push commit and tags
+        run: |
+          git push origin HEAD
+          git push origin --tags
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+
+
