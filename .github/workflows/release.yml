@@ -35,7 +35,8 @@ jobs:
             exit 1
           fi
       - name: Bump version (commit + tag v<version>)
-        run: npm version ${{ inputs.version }} -m "chore(release): v%s"
+        run: |
+          npm version ${{ inputs.version }} -m "chore(release): v%s"
       - name: Push commit and tags
         run: |
           git push origin HEAD
