@@ -28,7 +28,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      - name: Guard: fail if tag already exists
+      - name: "Guard: fail if tag already exists"
         run: |
           if git rev-parse -q --verify "refs/tags/v${{ inputs.version }}"; then
             echo "Tag v${{ inputs.version }} already exists" >&2
