@@ -20,8 +20,7 @@ jobs:
         with:
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
-      - name: Install deps
-        run: npm ci || npm i --no-audit --no-fund
+
       - name: Run tests
         run: npm test
       - name: Configure Git

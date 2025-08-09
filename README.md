@@ -4,6 +4,8 @@ A zero-dependency CLI to merge Markdown rule files and write them to multiple ID
 
 Package on npm: [copy-agent-rules](https://www.npmjs.com/package/copy-agent-rules)
 
+GitHub repository: [applepig/copy-agent-rules](https://github.com/applepig/copy-agent-rules)
+
 ### For npx users (quick start)
 
 Run the CLI with command-line args only:
