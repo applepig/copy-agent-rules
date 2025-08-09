@@ -2,6 +2,8 @@
 
 A zero-dependency CLI to merge Markdown rule files and write them to multiple IDE-specific locations.
 
+Package on npm: [copy-agent-rules](https://www.npmjs.com/package/copy-agent-rules)
+
 ### For npx users (quick start)
 
 Run the CLI with command-line args only:

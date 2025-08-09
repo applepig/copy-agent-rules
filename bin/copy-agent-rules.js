@@ -71,7 +71,16 @@ async function loadConfig(config_path) {
         const file_cfg = mod && (mod.default ?? mod.config ?? mod);
         if (isPlainObject(file_cfg)) cfg = file_cfg;
     } catch (e) {
-        if (e.code !== 'ENOENT') console.warn(`⚠️  Failed to load config: ${e.message}`);
+        // Fallback: if the provided .js is outside an ESM package, import as data URL (always ESM)
+        try {
+            const raw = await fs.readFile(cfg_path, 'utf-8');
+            const dataUrl = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(raw);
+            const mod2 = await import(dataUrl);
+            const file_cfg2 = mod2 && (mod2.default ?? mod2.config ?? mod2);
+            if (isPlainObject(file_cfg2)) cfg = file_cfg2;
+        } catch (e2) {
+            if (e.code !== 'ENOENT') console.warn(`⚠️  Failed to load config: ${e.message}`);
+        }
     }
     if (!Array.isArray(cfg.formats)) throw new Error('config.formats must be an array');
     if (!isPlainObject(cfg.formats_dict)) throw new Error('config.formats_dict must be an object');
