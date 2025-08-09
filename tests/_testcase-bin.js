@@ -65,4 +65,23 @@ export async function testHelpOutput(t) {
     await t.assert(res.out.toLowerCase().includes('available formats'), 'help should include formats list');
 }
 
+export async function testConfigFlag(t) {
+    t.log('config flag: custom path');
+    const tmp_src = await t.mkTmpDir('car-src');
+    const tmp_dest = await t.mkTmpDir('car-dest');
+    await t.writeFile(path.join(tmp_src, 'a.md'), '# A');
+
+    const tmp_cfg_dir = await t.mkTmpDir('car-cfg');
+    const cfg_path = path.join(tmp_cfg_dir, 'cfg.mjs');
+    await t.writeFile(cfg_path, `export default {\n  overwrite: false,\n  formats: ['codex'],\n  formats_dict: { codex: { filename: 'from-config.md' } }\n};`);
+
+    const res = await t.runCli([tmp_src, tmp_dest, '--config', cfg_path]);
+    await t.assert(res.code === 0, 'cli exit 0');
+    await t.assert(res.out.includes('using config from'), 'should log config path');
+    await t.assert(res.out.includes(cfg_path), 'should show cfg path');
+
+    const exists = await fs.access(path.join(tmp_dest, 'from-config.md')).then(() => true).catch(() => false);
+    await t.assert(exists, 'should generate file from config');
+}
+
 

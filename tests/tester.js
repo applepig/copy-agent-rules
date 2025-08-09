@@ -60,7 +60,7 @@ class Tester {
 }
 
 import { testConfigLoadAndValidate } from './_testcase-config.js';
-import { testBasicMergeAndOutputs, testOverwriteFlag, testHelpOutput } from './_testcase-bin.js';
+import { testBasicMergeAndOutputs, testOverwriteFlag, testHelpOutput, testConfigFlag } from './_testcase-bin.js';
 
 async function main() {
     const t = new Tester();
@@ -69,6 +69,7 @@ async function main() {
         await testBasicMergeAndOutputs(t);
         await testOverwriteFlag(t);
         await testHelpOutput(t);
+        await testConfigFlag(t);
         t.log('All tests passed.');
     } catch (e) {
         console.error('Test failed:', e.message);

@@ -7,7 +7,7 @@ A zero-dependency CLI to merge Markdown rule files and write them to multiple ID
 Run the CLI with command-line args only:
 
 ```
-npx copy-agent-rules <src_dir> <dest_dir> [--formats <list>] [--overwrite]
+npx copy-agent-rules <src_dir> <dest_dir> [--formats <list>] [--overwrite] [--config <file>]
 npx copy-agent-rules -h | --help
 ```
 
@@ -16,6 +16,7 @@ Arguments:
 - `dest_dir`: target project root to receive outputs
 - `--formats`: comma-separated list, overrides formats from `config.js`
 - `--overwrite`: overwrite existing files without prompt
+- `--config <file>`: use config from the given file (default: `./config.js`)
 - `-h, --help`: show help and list available formats (read from `config.js`)
 
 Available formats (default, from `config.js`):
@@ -26,6 +27,12 @@ chatgpt-codex, claude, cline, codex, cursor, gemini, kiro, vscode, windsurf
 Example:
 ```
 npx copy-agent-rules src dist --formats codex,cursor --overwrite
+```
+
+During execution the CLI prints the path of the loaded config:
+
+```
+using config from /path/to/config.js
 ```
 
 ### For git-cloned users (local development)
