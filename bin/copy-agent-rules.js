@@ -19,7 +19,7 @@ function showHelp(cfg) {
 copy-agent-rules - Merge Markdown files and output to multiple IDE formats
 
 Usage:
-  copy-agent-rules <src_dir> <dest_dir> [--formats <list>] [--overwrite] [--config <file>]
+  copy-agent-rules <src_path> <dest_dir> [--formats <list>] [--overwrite] [--config <file>]
 
 Options:
   --formats <list>   Comma-separated formats to output (overrides config formats)
@@ -178,16 +178,23 @@ function resolveOutput(dest_dir, subpath, file_name) {
     return { output_dir, full_path: path.join(output_dir, file_name) };
 }
 
-async function run({ source_dir, dest_dir, formats_csv, overwrite_flag, config_path }) {
+async function run({ source_path, dest_dir, formats_csv, overwrite_flag, config_path }) {
     console.log('🚀 Start');
-    debugLog(`run: src=${source_dir}, dest=${dest_dir}, formats=${formats_csv || '(default)'}`);
+    debugLog(`run: src=${source_path}, dest=${dest_dir}, formats=${formats_csv || '(default)'}`);
     const { cfg, cfg_path } = await loadConfig(config_path);
     console.log(`using config from ${cfg_path}`);
     const enabled_formats = resolveFormats(cfg.formats || [], cfg.formats_dict || {}, formats_csv)
         .sort((a, b) => a.localeCompare(b));
     if (enabled_formats.length === 0) { console.warn('⚠️  No formats to output'); return { success: false }; }
 
-    const files = await scanMarkdownFiles(source_dir);
+    // accept directory or single markdown file
+    const stat = await fs.stat(source_path).catch(() => null);
+    let files = [];
+    if (stat && stat.isFile()) {
+        files = [source_path];
+    } else {
+        files = await scanMarkdownFiles(source_path);
+    }
     if (files.length === 0) { console.warn('⚠️  No .md files found in src'); return { success: false }; }
     const merged = await readMergeMarkdown(files);
 
@@ -226,13 +233,13 @@ async function main() {
         process.exit(0);
     }
     if (!args || args.length < 2) {
-        console.error('❌ Missing <src_dir> and <dest_dir>');
+        console.error('❌ Missing <src_path> and <dest_dir>');
         showHelp();
         process.exit(1);
     }
     const [src, dest] = args;
     try {
-        const res = await run({ source_dir: src, dest_dir: dest, formats_csv: options.formats, overwrite_flag: options.overwrite, config_path: options.config });
+        const res = await run({ source_path: src, dest_dir: dest, formats_csv: options.formats, overwrite_flag: options.overwrite, config_path: options.config });
         process.exit(res.success ? 0 : 1);
     } catch (e) {
         console.error('❌ Failed:', e.message);
