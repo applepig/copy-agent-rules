@@ -31,13 +31,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/applepig81/copy-agent-rules.git"
+    "url": "git+https://github.com/applepig/copy-agent-rules.git"
   },
   "publishConfig": {
     "access": "public"
   },
   "bugs": {
-    "url": "https://github.com/applepig81/copy-agent-rules/issues"
+    "url": "https://github.com/applepig/copy-agent-rules/issues"
   },
   "homepage": "https://www.npmjs.com/package/copy-agent-rules"
 }
