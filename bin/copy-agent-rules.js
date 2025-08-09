@@ -19,11 +19,12 @@ function showHelp(cfg) {
 copy-agent-rules - Merge Markdown files and output to multiple IDE formats
 
 Usage:
-  copy-agent-rules <src_dir> <dest_dir> [--formats <list>] [--overwrite]
+  copy-agent-rules <src_dir> <dest_dir> [--formats <list>] [--overwrite] [--config <file>]
 
 Options:
   --formats <list>   Comma-separated formats to output (overrides config formats)
   --overwrite        Overwrite existing files without prompting (default: false)
+  --config <file>    Use config from the given file (default: ./config.js)
   -h, --help         Show help
 
 Available formats (from config.js):
@@ -44,13 +45,15 @@ Config sample (cwd/config.js):
 
 function parseArgs(argv) {
     const args = [];
-    const options = { overwrite: false, formats: undefined };
+    const options = { overwrite: false, formats: undefined, config: undefined };
     for (let i = 0; i < argv.length; i++) {
         const token = argv[i];
         if (token === '-h' || token === '--help') return { help: true };
         if (token === '--overwrite') { options.overwrite = true; continue; }
         if (token.startsWith('--formats=')) { options.formats = token.slice('--formats='.length); continue; }
         if (token === '--formats') { options.formats = argv[i + 1] || ''; i++; continue; }
+        if (token.startsWith('--config=')) { options.config = token.slice('--config='.length); continue; }
+        if (token === '--config') { options.config = argv[i + 1] || ''; i++; continue; }
         args.push(token);
     }
     return { args, options };
@@ -58,22 +61,22 @@ function parseArgs(argv) {
 
 function isPlainObject(obj) { return obj && typeof obj === 'object' && !Array.isArray(obj); }
 
-async function loadConfig(cwd) {
+async function loadConfig(config_path) {
     debugLog('loadConfig: start');
     let cfg = { overwrite: false, formats: [], formats_dict: {} };
+    const cfg_path = config_path || path.join(process.cwd(), 'config.js');
     try {
-        const cfgPath = path.join(cwd, 'config.js');
-        const url = pathToFileURL(cfgPath).href;
+        const url = pathToFileURL(cfg_path).href;
         const mod = await import(url);
-        const fileCfg = mod && (mod.default ?? mod.config ?? mod);
-        if (isPlainObject(fileCfg)) cfg = fileCfg;
+        const file_cfg = mod && (mod.default ?? mod.config ?? mod);
+        if (isPlainObject(file_cfg)) cfg = file_cfg;
     } catch (e) {
-        if (e.code !== 'ENOENT') console.warn(`⚠️  Failed to load config.js: ${e.message}`);
+        if (e.code !== 'ENOENT') console.warn(`⚠️  Failed to load config: ${e.message}`);
     }
     if (!Array.isArray(cfg.formats)) throw new Error('config.formats must be an array');
     if (!isPlainObject(cfg.formats_dict)) throw new Error('config.formats_dict must be an object');
     debugLog('loadConfig: done');
-    return cfg;
+    return { cfg, cfg_path };
 }
 
 function resolveFormats(config_formats, config_map, override_csv) {
@@ -166,10 +169,11 @@ function resolveOutput(dest_dir, subpath, file_name) {
     return { output_dir, full_path: path.join(output_dir, file_name) };
 }
 
-async function run({ source_dir, dest_dir, formats_csv, overwrite_flag }) {
+async function run({ source_dir, dest_dir, formats_csv, overwrite_flag, config_path }) {
     console.log('🚀 Start');
     debugLog(`run: src=${source_dir}, dest=${dest_dir}, formats=${formats_csv || '(default)'}`);
-    const cfg = await loadConfig(process.cwd());
+    const { cfg, cfg_path } = await loadConfig(config_path);
+    console.log(`using config from ${cfg_path}`);
     const enabled_formats = resolveFormats(cfg.formats || [], cfg.formats_dict || {}, formats_csv)
         .sort((a, b) => a.localeCompare(b));
     if (enabled_formats.length === 0) { console.warn('⚠️  No formats to output'); return { success: false }; }
@@ -207,9 +211,9 @@ async function run({ source_dir, dest_dir, formats_csv, overwrite_flag }) {
 async function main() {
     const { args, options, help } = parseArgs(process.argv.slice(2));
     if (help) {
-        let cfgForHelp = undefined;
-        try { cfgForHelp = await loadConfig(process.cwd()); } catch { }
-        showHelp(cfgForHelp);
+        let cfg_for_help = undefined;
+        try { const r = await loadConfig(); cfg_for_help = r.cfg; } catch { }
+        showHelp(cfg_for_help);
         process.exit(0);
     }
     if (!args || args.length < 2) {
@@ -219,7 +223,7 @@ async function main() {
     }
     const [src, dest] = args;
     try {
-        const res = await run({ source_dir: src, dest_dir: dest, formats_csv: options.formats, overwrite_flag: options.overwrite });
+        const res = await run({ source_dir: src, dest_dir: dest, formats_csv: options.formats, overwrite_flag: options.overwrite, config_path: options.config });
         process.exit(res.success ? 0 : 1);
     } catch (e) {
         console.error('❌ Failed:', e.message);
