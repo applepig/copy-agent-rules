@@ -60,13 +60,14 @@ class Tester {
 }
 
 import { testConfigLoadAndValidate } from './_testcase-config.js';
-import { testBasicMergeAndOutputs, testOverwriteFlag, testHelpOutput, testConfigFlag } from './_testcase-bin.js';
+import { testBasicMergeAndOutputs, testSingleFileSrc, testOverwriteFlag, testHelpOutput, testConfigFlag } from './_testcase-bin.js';
 
 async function main() {
     const t = new Tester();
     try {
         await testConfigLoadAndValidate(t);
         await testBasicMergeAndOutputs(t);
+        await testSingleFileSrc(t);
         await testOverwriteFlag(t);
         await testHelpOutput(t);
         await testConfigFlag(t);

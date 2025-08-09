@@ -35,6 +35,29 @@ export async function testBasicMergeAndOutputs(t) {
     await t.assert(cursor_content.startsWith('---'), 'cursor content should include frontmatter prepend');
 }
 
+export async function testSingleFileSrc(t) {
+    t.log('single file: setup');
+    const tmp_dir = await t.mkTmpDir('car-single');
+    const tmp_dest = await t.mkTmpDir('car-dest');
+    const src_file = path.join(tmp_dir, 'single.md');
+    await t.writeFile(src_file, '# One');
+
+    t.log('single file: run CLI');
+    const { code } = await t.runCli([src_file, tmp_dest, '--formats', 'codex', '--overwrite']);
+    t.log(`cli exit=${code}`);
+    if (code !== 0) {
+        throw new Error('CLI should exit 0');
+    }
+
+    const codex_path = path.join(tmp_dest, 'codex.md');
+    const codex_exists = await fs.access(codex_path).then(() => true).catch(() => false);
+    await t.assert(codex_exists, 'codex.md should exist');
+
+    const codex_content = await t.readFile(codex_path);
+    await t.assert(codex_content.includes('# One'), 'should include file content');
+    await t.assert(codex_content.includes('source: single.md'), 'should include source marker');
+}
+
 export async function testOverwriteFlag(t) {
     t.log('overwrite: setup');
     const tmp_src = await t.mkTmpDir('car-src');

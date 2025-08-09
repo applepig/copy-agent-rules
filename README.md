@@ -11,12 +11,12 @@ GitHub repository: [applepig/copy-agent-rules](https://github.com/applepig/copy-
 Run the CLI with command-line args only:
 
 ```
-npx copy-agent-rules <src_dir> <dest_dir> [--formats <list>] [--overwrite] [--config <file>]
+npx copy-agent-rules <src_path> <dest_dir> [--formats <list>] [--overwrite] [--config <file>]
 npx copy-agent-rules -h | --help
 ```
 
 Arguments:
-- `src_dir`: directory containing one or more `.md` files (merged by filename order)
+- `src_path`: directory containing one or more `.md` files (merged by filename order) or a single `.md` file
 - `dest_dir`: target project root to receive outputs
 - `--formats`: comma-separated list, overrides formats from `config.js`
 - `--overwrite`: overwrite existing files without prompt
@@ -47,7 +47,7 @@ Main files:
  - `tests/tester.js`: zero-dependency E2E test runner.
 
 Common scripts:
-- `npm run copy -- <src_dir> <dest_dir> [--formats <list>] [--overwrite]`
+- `npm run copy -- <src_path> <dest_dir> [--formats <list>] [--overwrite]`
 - `npm test`
 
 Config (ESM, `config.js`):
@@ -64,7 +64,7 @@ export default {
 ```
 
 Notes:
-- All `.md` in `src_dir` are merged with a `<!-- source: <file> -->` marker.
+- All `.md` in `src_path` are merged with a `<!-- source: <file> -->` marker.
 - `prepend` (optional) adds per-format content to the very top.
 
 ### License
