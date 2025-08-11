@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { pathToFileURL } from 'url';
+import { pathToFileURL, fileURLToPath } from 'url';
 import readline from 'readline';
 
 // DEBUG flag block (scoped logs)
@@ -64,7 +64,8 @@ function isPlainObject(obj) { return obj && typeof obj === 'object' && !Array.is
 async function loadConfig(config_path) {
     debugLog('loadConfig: start');
     let cfg = { overwrite: false, formats: [], formats_dict: {} };
-    const cfg_path = config_path || path.join(process.cwd(), 'config.js');
+    let cfg_path = config_path || path.join(process.cwd(), 'config.js');
+    let using_pkg_cfg = false;
     try {
         const url = pathToFileURL(cfg_path).href;
         const mod = await import(url);
@@ -74,18 +75,35 @@ async function loadConfig(config_path) {
         // Fallback: if the provided .js is outside an ESM package, import as data URL (always ESM)
         try {
             const raw = await fs.readFile(cfg_path, 'utf-8');
-            const dataUrl = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(raw);
-            const mod2 = await import(dataUrl);
+            const data_url = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(raw);
+            const mod2 = await import(data_url);
             const file_cfg2 = mod2 && (mod2.default ?? mod2.config ?? mod2);
             if (isPlainObject(file_cfg2)) cfg = file_cfg2;
         } catch (e2) {
-            if (e.code !== 'ENOENT') console.warn(`⚠️  Failed to load config: ${e.message}`);
+            if (e2.code === 'ENOENT') {
+                // when user config missing, use bundled config as default
+                const pkg_cfg_path = fileURLToPath(new URL('../config.js', import.meta.url));
+                try {
+                    const pkg_url = pathToFileURL(pkg_cfg_path).href;
+                    const pkg_mod = await import(pkg_url);
+                    const pkg_cfg = pkg_mod && (pkg_mod.default ?? pkg_mod.config ?? pkg_mod);
+                    if (isPlainObject(pkg_cfg)) {
+                        cfg = pkg_cfg;
+                        cfg_path = pkg_cfg_path;
+                        using_pkg_cfg = true;
+                    }
+                } catch (e3) {
+                    console.warn(`⚠️  Failed to load bundled config: ${e3.message}`);
+                }
+            } else if (e.code !== 'ENOENT') {
+                console.warn(`⚠️  Failed to load config: ${e.message}`);
+            }
         }
     }
     if (!Array.isArray(cfg.formats)) throw new Error('config.formats must be an array');
     if (!isPlainObject(cfg.formats_dict)) throw new Error('config.formats_dict must be an object');
     debugLog('loadConfig: done');
-    return { cfg, cfg_path };
+    return { cfg, cfg_path, using_pkg_cfg };
 }
 
 function resolveFormats(config_formats, config_map, override_csv) {
@@ -181,8 +199,12 @@ function resolveOutput(dest_dir, subpath, file_name) {
 async function run({ source_path, dest_dir, formats_csv, overwrite_flag, config_path }) {
     console.log('🚀 Start');
     debugLog(`run: src=${source_path}, dest=${dest_dir}, formats=${formats_csv || '(default)'}`);
-    const { cfg, cfg_path } = await loadConfig(config_path);
-    console.log(`using config from ${cfg_path}`);
+    const { cfg, cfg_path, using_pkg_cfg } = await loadConfig(config_path);
+    if (using_pkg_cfg) {
+        console.log(`using bundled config from ${cfg_path}`);
+    } else {
+        console.log(`using config from ${cfg_path}`);
+    }
     const enabled_formats = resolveFormats(cfg.formats || [], cfg.formats_dict || {}, formats_csv)
         .sort((a, b) => a.localeCompare(b));
     if (enabled_formats.length === 0) { console.warn('⚠️  No formats to output'); return { success: false }; }
